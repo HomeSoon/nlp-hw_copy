@@ -9,6 +9,7 @@ from math import log
 from numpy import mean
 import gzip
 import json
+import spacy
 
 class Feature:
     """
@@ -38,38 +39,60 @@ class LengthFeature(Feature):
 
         # How many words long is the question?
         yield ("word", (len(run.split()) - 75) / 75)
-
-        ftp = 0
-
-        yield("qanta_id", question['qanta_id'])
-        yield ('vowel', log(sum(i in ['a', 'e', 'i', 'o', 'u'] for i in guess) + 1))
-
-        # is it a verb? noun? 
-        yield ('prop', log(len(run)/ len(guess)))
-        
+   
         # How many characters long is the guess?
         if guess is None or guess=="":
             yield ("guess", -1)
         else:
             yield ("guess", log(1 + len(guess)))
+    
 
 class GuessBlankFeature(Feature):
     """
     Is guess blank?
-    """
-    def __call__(self, question, run, guess):
+    """        
+    def __call__(self, question, run, guess, guess_history):
         yield ('true', len(guess) == 0)
 
-class RandomFeature(Feature):
-    def __call__(self, question, run, guess):
-        yield ('Random', len(guess) % 2)
+class CorrelationFeature(Feature):
+    '''
+    calculates the correlation score between the guess and the quesiton using spacy
+    '''
+    def __call__(self, question, run, guess, guess_history):
+        nlp = spacy.load("en_core_web_sm")
+        guess = nlp(guess)
+        run = nlp(run)
 
-class GuessCapitalsFeature(Feature):
-    """
-    Capital letters in guess
-    """
-    def __call__(self, question, run, guess):
-        yield ('true', log(sum(i.isupper() for i in guess) + 1))
+        similarity = guess.similarity(run)
+        yield("similarity", similarity)
+        print(similarity)
+
+class EntityFeature(Feature):
+    def __call__(self, question, run, guess, guess_history):
+        nlp = spacy.load("en_core_web_sm")
+        doc_guess = nlp(guess)
+        doc_question = nlp(run)
+
+        entities_question = [ents.label_ for ents in doc_question.ents]
+        entities_guess = [ents.label_ for ents in doc_guess.ents]
+
+        res = False
+
+        for ent in entities_guess:
+            if ent in entities_question:
+                res = True
+                break
+        
+        yield("true", res)
+
+class VerbFeature(Feature):
+    def __call__(self, question, run, guess, guess_history):
+        nlp = spacy.load("en_core_web_sm")
+        doc_guess = nlp(guess)
+        POS_guess = [token.pos_ for token in doc_guess]
+        print(POS_guess)
+        
+        yield("true", "VERB" in POS_guess)
 
 
 if __name__ == "__main__":

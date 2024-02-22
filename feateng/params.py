@@ -217,17 +217,26 @@ def load_buzzer(flags, load=False):
             buzzer.add_feature(feature)
             features_added.add(ff)
 
-        if ff == "Blank":
-            from features import GuessBlankFeature
-            feature = GuessBlankFeature(ff)
-            buzzer.add_feature(ff)
+        if ff == "Verb":
+            from features import VerbFeature
+            feature = VerbFeature(ff)
+            buzzer.add_feature(feature)
             features_added.add(ff)
 
-        if ff == "Random":
-            from features import RandomFeature
-            feature = RandomFeature(ff)
-            buzzer.add_feature(ff)
+        if ff == "Entity":
+            from features import EntityFeature
+            feature = EntityFeature(ff)
+            buzzer.add_feature(feature)
             features_added.add(ff)
+
+        if ff == "Sim":
+            from features import CorrelationFeature
+            feature = CorrelationFeature(ff)
+            buzzer.add_feature(feature)
+            features_added.add(ff)
+
+
+
 
 
     if len(flags.features) != len(features_added):
