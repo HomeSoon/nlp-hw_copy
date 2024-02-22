@@ -41,18 +41,18 @@ class LengthFeature(Feature):
 
         ftp = 0
 
+        yield("qanta_id", question['qanta_id'])
+        yield ('vowel', log(sum(i in ['a', 'e', 'i', 'o', 'u'] for i in guess) + 1))
+
+        # is it a verb? noun? 
+        yield ('prop', log(len(run)/ len(guess)))
+        
         # How many characters long is the guess?
         if guess is None or guess=="":
             yield ("guess", -1)
         else:
             yield ("guess", log(1 + len(guess)))
 
-            
-
-
-
-        
-        
 class GuessBlankFeature(Feature):
     """
     Is guess blank?
@@ -60,6 +60,9 @@ class GuessBlankFeature(Feature):
     def __call__(self, question, run, guess):
         yield ('true', len(guess) == 0)
 
+class RandomFeature(Feature):
+    def __call__(self, question, run, guess):
+        yield ('Random', len(guess) % 2)
 
 class GuessCapitalsFeature(Feature):
     """
